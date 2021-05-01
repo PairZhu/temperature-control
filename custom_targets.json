@@ -1,5 +1,0 @@
-{
-    "MY_TARGET": {
-        "inherits": ["Target"]
-    }
-}
