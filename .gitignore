@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+BUILD/
+.vscode/
+mbed-os/
+mbed-os.lib
+custom_targets.json
+.mbed
+
