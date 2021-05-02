@@ -5,28 +5,28 @@ void Screen::setAddress(uint x_beg, uint y_beg, uint x_end, uint y_end)
     if (horizontal)
     {
         writeCmd(0x2a); //列地址设置
-        writeColor(x_beg+1);
-        writeColor(x_end+1);
+        writeColor(x_beg + 1);
+        writeColor(x_end + 1);
         writeCmd(0x2b); //行地址设置
-        writeColor(y_beg+2);
-        writeColor(y_end+2);
+        writeColor(y_beg + 2);
+        writeColor(y_end + 2);
         writeCmd(0x2c); //储存器写
     }
     else
     {
         writeCmd(0x2a); //列地址设置
-        writeColor(x_beg+2);
-        writeColor(x_end+2);
+        writeColor(x_beg + 2);
+        writeColor(x_end + 2);
         writeCmd(0x2b); //行地址设置
-        writeColor(y_beg+1);
-        writeColor(y_end+1);
+        writeColor(y_beg + 1);
+        writeColor(y_end + 1);
         writeCmd(0x2c); //储存器写
     }
 }
 
 void Screen::fillRect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color)
 {
-    setAddress(x_beg, y_beg, x_end-1, y_end-1);
+    setAddress(x_beg, y_beg, x_end - 1, y_end - 1);
     for (uint x = x_beg; x != x_end; ++x)
     {
         for (uint y = y_beg; y != y_end; ++y)
@@ -136,4 +136,52 @@ void Screen::init()
     //开始绘制页面
     writeCmd(0x29);
     clear();
+}
+
+void Screen::line(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color)
+{
+    int x, y;
+    int dx = x_end - x_beg, dy = y_end - y_beg;
+    if (dx < 0)
+        dx = -dx;
+    if (dy < 0)
+        dy = -dy;
+    int p = 2 * dy - dx;
+    int twody = 2 * dy, twodysubdx = 2 * (dy - dx);
+
+    if (x_beg > x_end)
+    {
+        x = x_end;
+        y = y_end;
+        x_end = x_beg;
+        y_end = y_beg;
+    }
+    else
+    {
+        x = x_beg;
+        y = y_beg;
+    }
+    point(x, y, color);
+    while (x < x_end)
+    {
+        x++;
+        if (p < 0)
+        {
+            p += twody;
+        }
+        else
+        {
+            y++;
+            p += twodysubdx;
+        }
+        point(x, y, color);
+    }
+}
+
+void Screen::rect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color)
+{
+    line(x_beg, y_beg, x_end, y_beg, color);
+    line(x_beg, y_end, x_end, y_end, color);
+    line(x_beg, y_beg, x_beg, y_end, color);
+    line(x_end, y_beg, x_end, y_end, color);
 }

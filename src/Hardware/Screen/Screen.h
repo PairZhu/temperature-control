@@ -16,7 +16,7 @@ namespace Color
         red = 0xf800,
         lightgreen = 0x841f,
         green = 0x07e0,
-        darkgreen= 0x0064,
+        darkgreen = 0x0064,
         brown = 0xbc40,
         yellow = 0xffe0,
         cyan = 0x7fff,
@@ -36,8 +36,8 @@ private:
     SPI *const spi;
     const bool new_spi;
     const bool horizontal; //水平显示
-    uint brushColor;  //当前画笔颜色
-    uint backgroundColor;   //背景色
+    uint brushColor;       //当前画笔颜色
+    uint backgroundColor;  //背景色
     void write(u8 data)    //写入8位
     {
         spi->lock();
@@ -66,11 +66,11 @@ private:
     }
     void setAddress(uint x_beg, uint y_beg, uint x_end, uint y_end);
     Screen(PinName _reset, PinName _dataCmd, PinName _cs, PinName _backLight, SPI *spi_ptr, bool _new_spi, bool _horizontal)
-    : reset(_reset), dataCmd(_dataCmd), backLight(_backLight),
-    spi(spi_ptr), cs(_cs), new_spi(_new_spi),
-    horizontal(_horizontal), brushColor(Color::black), backgroundColor(Color::white)
+        : reset(_reset), dataCmd(_dataCmd), backLight(_backLight),
+          spi(spi_ptr), cs(_cs), new_spi(_new_spi),
+          horizontal(_horizontal), brushColor(Color::black), backgroundColor(Color::white)
     {
-        cs=1;
+        cs = 1;
     }
 
 public:
@@ -79,20 +79,24 @@ public:
     void init();
     void setColor(uint color) { brushColor = color; }
     void setBKColor(uint color) { backgroundColor = color; }
-    SPI* getSpi() { return spi; }
+    SPI *getSpi() { return spi; }
     uint getColor() { return brushColor; }
     uint getBKColor() { return backgroundColor; }
-    void clear() 
+    void clear()
     {
-        if(horizontal)
+        if (horizontal)
             fillRect(0, 0, height, width, backgroundColor);
         else
             fillRect(0, 0, width, height, backgroundColor);
     }
     void fillRect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color);
     void fillRect(uint x_beg, uint y_beg, uint x_end, uint y_end) { fillRect(x_beg, y_beg, x_end, y_end, brushColor); }
+    void rect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color);
+    void rect(uint x_beg, uint y_beg, uint x_end, uint y_end) { rect(x_beg, y_beg, x_end, y_end, brushColor); }
     void point(uint x, uint y, uint color);
-    void point(uint x, uint y) { point(x, y, brushColor);}
+    void point(uint x, uint y) { point(x, y, brushColor); }
+    void line(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color);
+    void line(uint x_beg, uint y_beg, uint x_end, uint y_end) { line(x_beg, y_beg, x_end, y_end, brushColor); }
     Screen(PinName _reset, PinName _dataCmd, PinName _cs, PinName _backLight, bool _horizontal = false, PinName sck = D13)
         : Screen(_reset, _dataCmd, _cs, _backLight, new SPI(D11, NC, sck), true, _horizontal) {}
     Screen(PinName _reset, PinName _dataCmd, PinName _cs, PinName _backLight, SPI &_spi, bool _horizontal = false)
