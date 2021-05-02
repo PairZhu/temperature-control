@@ -135,4 +135,5 @@ void Screen::init()
     writeData(0x05); //65,000种颜色
     //开始绘制页面
     writeCmd(0x29);
+    clear();
 }

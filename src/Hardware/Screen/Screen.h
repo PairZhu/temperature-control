@@ -40,11 +40,13 @@ private:
     uint backgroundColor;   //背景色
     void write(u8 data)    //写入8位
     {
+        spi->lock();
         cs = 0;
         spi->frequency(1000000);
         spi->format(8, 0);
         spi->write(data);
         cs = 1;
+        spi->unlock();
     }
     void writeCmd(u8 cmd)
     {
@@ -63,8 +65,7 @@ private:
         write(color);
     }
     void setAddress(uint x_beg, uint y_beg, uint x_end, uint y_end);
-    void init();
-    Screen(PinName _reset, PinName _dataCmd, PinName _backLight, SPI *spi_ptr, PinName _cs, bool _new_spi, bool _horizontal)
+    Screen(PinName _reset, PinName _dataCmd, PinName _cs, PinName _backLight, SPI *spi_ptr, bool _new_spi, bool _horizontal)
     : reset(_reset), dataCmd(_dataCmd), backLight(_backLight),
     spi(spi_ptr), cs(_cs), new_spi(_new_spi),
     horizontal(_horizontal), brushColor(Color::black), backgroundColor(Color::white)
@@ -75,8 +76,10 @@ private:
 public:
     static constexpr int width = 128;
     static constexpr int height = 160;
+    void init();
     void setColor(uint color) { brushColor = color; }
     void setBKColor(uint color) { backgroundColor = color; }
+    SPI* getSpi() { return spi; }
     uint getColor() { return brushColor; }
     uint getBKColor() { return backgroundColor; }
     void clear() 
@@ -90,10 +93,10 @@ public:
     void fillRect(uint x_beg, uint y_beg, uint x_end, uint y_end) { fillRect(x_beg, y_beg, x_end, y_end, brushColor); }
     void point(uint x, uint y, uint color);
     void point(uint x, uint y) { point(x, y, brushColor);}
-    Screen(PinName _reset, PinName _dataCmd, PinName _backLight, PinName _cs, bool _horizontal = false, PinName sck = D13)
-        : Screen(_reset, _dataCmd, _backLight, new SPI(D11, NC, sck), _cs, true, _horizontal) {}
-    Screen(PinName _reset, PinName _dataCmd, PinName _backLight, PinName _cs, SPI &_spi, bool _horizontal = false)
-        : Screen(_reset, _dataCmd, _backLight, &_spi, _cs, false, _horizontal) {}
+    Screen(PinName _reset, PinName _dataCmd, PinName _cs, PinName _backLight, bool _horizontal = false, PinName sck = D13)
+        : Screen(_reset, _dataCmd, _cs, _backLight, new SPI(D11, NC, sck), true, _horizontal) {}
+    Screen(PinName _reset, PinName _dataCmd, PinName _cs, PinName _backLight, SPI &_spi, bool _horizontal = false)
+        : Screen(_reset, _dataCmd, _cs, _backLight, &_spi, false, _horizontal) {}
 };
 
 #endif
