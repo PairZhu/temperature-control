@@ -15,5 +15,6 @@ int main()
 
     //cout<<"\nBegin"<<endl;
     gui.init();
-    
+    read_temperature();
+    while(1)
 }

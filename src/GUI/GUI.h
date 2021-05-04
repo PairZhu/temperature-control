@@ -8,6 +8,13 @@ class GUI
 private:
     using u8 = unsigned char;
     using uint = unsigned int;
+    enum 
+    {
+        UP=0,
+        DOWN=1,
+        CANCEL=2,
+        ENTER=3
+    }
     Screen& screen;
     u8 TArr[100];
 
