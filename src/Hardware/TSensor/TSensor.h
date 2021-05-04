@@ -31,11 +31,13 @@ public:
     }
     double readT()
     {
+        spi->lock();
         cs = 0;
         spi->frequency(1000000);
         spi->format(16, 1);
         uint response = spi->write(0xffu);
         cs = 1;
+        spi->unlock();
         if (response & (1 << 2))
         {
             return -1.0f;
