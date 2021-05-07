@@ -26,10 +26,14 @@ void Screen::setAddress(uint x_beg, uint y_beg, uint x_end, uint y_end)
 
 void Screen::fillRect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color)
 {
-    if(x_beg>x_end) swap(x_beg,x_end);
-    if(y_beg>y_end) swap(y_beg,y_end);
-    if(x_beg>xMax) x_beg=xMax;
-    if(y_beg>yMax) y_beg=yMax; 
+    if (x_beg > x_end)
+        swap(x_beg, x_end);
+    if (y_beg > y_end)
+        swap(y_beg, y_end);
+    if (x_beg > xMax)
+        x_beg = xMax;
+    if (y_beg > yMax)
+        y_beg = yMax;
     setAddress(x_beg, y_beg, x_end, y_end);
     for (uint x = x_beg; x <= x_end; ++x)
     {
@@ -42,14 +46,16 @@ void Screen::fillRect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color
 
 void Screen::point(uint x, uint y, uint color)
 {
-    if(x>xMax || y>yMax) return;
+    if (x > xMax || y > yMax)
+        return;
     setAddress(x, y, x, y);
     writeColor(color);
 }
 
 void Screen::line(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color)
 {
-    if(x_beg==x_end || y_beg==y_end) fillRect(x_beg,y_beg,x_end,y_end,color);
+    if (x_beg == x_end || y_beg == y_end)
+        fillRect(x_beg, y_beg, x_end, y_end, color);
     int x, y;
     int dx = x_end - x_beg, dy = y_end - y_beg;
     if (dx < 0)
@@ -94,6 +100,35 @@ void Screen::rect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color)
     line(x_beg, y_end, x_end, y_end, color);
     line(x_beg, y_beg, x_beg, y_end, color);
     line(x_end, y_beg, x_end, y_end, color);
+}
+
+void Screen::showChar(char ch, uint lrx, uint lry, uint color)
+{
+    if(ch==' ') return;
+    const vector<u8> &chData = fontMap[ch];
+    uint y = lry;
+    for (u8 data : chData)
+    {
+        uint x = lrx;
+        for (u8 i = 1; i != 0x00; i <<= 1,++x)
+        {
+            if (data & i)
+            {
+                point(x, y, color);
+            }
+        }
+        --y;
+    }
+}
+
+void Screen::showStr(string str, uint lrx, uint lry, uint color)
+{
+    uint x=lrx;
+    for(auto ch:str)
+    {
+        showChar(ch, x, lry, color);
+        x+=Font::fontWidth;
+    }
 }
 
 void Screen::init()

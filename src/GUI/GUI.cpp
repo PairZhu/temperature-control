@@ -1,15 +1,28 @@
 #include "GUI.h"
 
 #include <algorithm>
-#include <memory>
+#include <string>
+
+void GUI::init() const
+{
+    //画图表
+    screen.init();
+    screen.fillRect(0, screen.yMax, screen.xMax, tableButtom, tableColor);
+    screen.line(lineLeft, lineButtom, lineLeft, screen.yMax);
+    screen.line(lineLeft, lineButtom, screen.xMax, lineButtom);
+    updateTargetLine();
+    updateTableStr();
+    //显示当前温度和目标温度
+    screen.showStr("Temp:  .  ~",3*fontWidth,tableButtom);
+    screen.showStr("Target:",fontWidth,tableButtom-fontHeight);
+}
 
 void GUI::updateTargetLine() const
 {
     static uint lastTargetLine = 0;
-    if (lastTargetLine != 0)
+    if (lastTargetLine != 0) //删除之前的目标温度线
     {
-        screen.line(lineLeft + 1, lastTargetLine, screen.xMax, lastTargetLine,
-                    tableColor);
+        screen.line(lineLeft + 1, lastTargetLine, screen.xMax, lastTargetLine, tableColor);
         screen.point(lineLeft, lastTargetLine);
     }
     uint targetLine = getY(targetT) + lineButtom;
@@ -34,13 +47,57 @@ void GUI::eraseTablePoint(uint x, uint y) const
         screen.point(x + lineLeft + 1, y + lineButtom, tableColor);
 }
 
-void GUI::init() const
+void GUI::updateTStr(float temperture) const
 {
-    screen.init();
-    screen.fillRect(0, screen.yMax, screen.xMax, tableButtom, tableColor);
-    screen.line(lineLeft, lineButtom, lineLeft, screen.yMax);
-    screen.line(lineLeft, lineButtom, screen.xMax, lineButtom);
-    updateTargetLine();
+    static string lastIntStr="  ";
+    static string lastDecimalStr="  ";
+    string intStr=to_string(int(temperture));
+    string decimalStr=to_string(int(temperture*100)%100);
+    if(intStr.length()<2)
+        intStr='0'+intStr;
+    if(decimalStr.length()<2)
+        decimalStr='0'+decimalStr;
+    uint x=8*fontWidth;
+    for(uint i=0;i!=2;++i,x+=fontWidth)
+    {
+        if(intStr[i]!=lastIntStr[i])
+        {
+            screen.showStr(string(1,lastIntStr[i]),x,tableButtom,Color::white);
+            screen.showStr(string(1,intStr[i]),x,tableButtom);
+        }
+    }
+    x=11*fontWidth;
+    for(uint i=0;i!=2;++i,x+=fontWidth)
+    {
+        if(decimalStr[i]!=lastDecimalStr[i])
+        {
+            screen.showStr(string(1,lastDecimalStr[i]),x,tableButtom,Color::white);
+            screen.showStr(string(1,decimalStr[i]),x,tableButtom);
+        }
+    }
+    lastIntStr=intStr;
+    lastDecimalStr=decimalStr;
+}
+
+void updateTargetStr()
+{
+
+}
+
+void GUI::updateTableStr() const
+{
+    static string lastTopStr="";
+    static string lastButtomStr="";
+    if(lastTopStr!="" || lastButtomStr!="")
+    {
+        screen.showStr(lastTopStr,0,screen.yMax,tableColor);
+        screen.showStr(lastButtomStr,0,lineButtom,tableColor);
+    }
+    string topStr=to_string(TTop),buttomStr=to_string(TButtom);
+    lastTopStr=topStr;
+    lastButtomStr=buttomStr;
+    screen.showStr(topStr,0,screen.yMax);
+    screen.showStr(buttomStr,0,lineButtom);
 }
 
 void GUI::caluRange()
@@ -61,8 +118,7 @@ void GUI::caluPoint()
         TTop = newTTop;
         TButtom = newTButtom;
         updateTargetLine();
-        printf("top:%d\n", TTop);
-        printf("buttom:%d\n", TButtom);
+        updateTableStr();
     }
     lastPointList = pointList;
     pointList.clear();
@@ -74,7 +130,7 @@ void GUI::caluPoint()
 
 void GUI::drawTable() const
 {
-    for (int i = 0; i < lastPointList.size(); i++)
+    for (int i = 0; i < lastPointList.size(); ++i)
     {
         if (lastPointList[i] != pointList[i])
         {
@@ -82,10 +138,16 @@ void GUI::drawTable() const
             drawTablePoint(i, pointList[i]);
         }
     }
+    if(lastPointList.size()<pointList.size())
+    {
+        uint pos=pointList.size()-1;
+        drawTablePoint(pos, pointList[pos]);
+    }
 }
 
 void GUI::onTChange(float newT)
 {
+    updateTStr(newT);
     TList.push_back(newT);
     if (TList.size() > tableXMax)
         TList.pop_front();

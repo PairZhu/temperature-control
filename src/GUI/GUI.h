@@ -3,6 +3,7 @@
 #include "mbed.h"
 #include <list>
 #include <vector>
+#include <string>
 #include <algorithm>
 #include "Screen.h"
 
@@ -24,10 +25,11 @@ private:
     static constexpr uint targetColor = Color::red;
     static constexpr uint lineColor = Color::blue;
     static constexpr uint tableHeight = 60;
-    static constexpr uint fontSize = 10;
+    static constexpr uint fontHeight = Font::fontHeight;
+    static constexpr uint fontWidth = Font::fontWidth;
     static constexpr uint tableYMax = 50;
     static constexpr uint tableXMax = 100;
-    static constexpr uint lineLeft = fontSize;
+    static constexpr uint lineLeft = 3*fontWidth;
     static constexpr float targetWidth = 5.0f;
 
     const uint tableButtom;
@@ -43,7 +45,9 @@ private:
     uint TButtom;
     uint pageId;
 
+    void updateTableStr() const;
     void updateTargetLine() const;
+    void updateTStr(float temperture)const;
     void drawTablePoint(uint x, uint y) const;
     void eraseTablePoint(uint x, uint y) const;
     void TargetTPage(keyCode keyValue);
@@ -58,8 +62,9 @@ private:
 
 public:
     GUI(Screen &_screen)
-        : screen(_screen), tableButtom(_screen.yMax - tableHeight), lineButtom(tableButtom + fontSize),
-          maxT(targetT+targetWidth), minT(targetT-targetWidth), pageId(0)
+        : screen(_screen), tableButtom(_screen.yMax - tableHeight), lineButtom(tableButtom + fontHeight),
+          maxT(targetT+targetWidth), minT(targetT-targetWidth), TTop((uint(maxT) / 10 + 1) * 10),
+          TButtom((uint(minT) / 10) * 10), pageId(0)
     {}
     void init() const;
     void onTChange(float newT);

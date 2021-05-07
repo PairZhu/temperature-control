@@ -18,6 +18,7 @@ private:
     }
 
 public:
+    static constexpr uint periodMs = 220;
     TSensor(PinName _cs, PinName so = D12, PinName sck = D13)
         : TSensor(_cs, new SPI(D11, so, sck), true) {}
     TSensor(PinName _cs, SPI &_spi)
@@ -33,7 +34,7 @@ public:
     {
         cs = 0;
         cs = 1;
-        ThisThread::sleep_for(250ms);
+        ThisThread::sleep_for(periodMs*1ms);
         spi->lock();
         cs = 0;
         spi->frequency(1000000);
