@@ -33,7 +33,8 @@ private:
     const uint lineButtom;
 
     Screen &screen;
-    list<uint> pointList;
+    vector<uint> pointList;
+    vector<uint> lastPointList;
     list<float> TList;
     float maxT;
     float minT;
@@ -42,6 +43,10 @@ private:
     void drawTablePoint(uint x, uint y) const;
     void eraseTablePoint(uint x, uint y) const;
     size_t getY(float temperature) const;
+
+    void caluRange();
+    void caluPoint();
+    void drawTable() const;
 
 public:
     GUI(Screen &_screen)
