@@ -97,3 +97,32 @@ void GUI::onKeyDown(keyCode keyValue)
 
     //修改TargetT别忘了修改minT和maxT
 }
+
+void GUI::TargetTPage(keyCode keyValue)
+{
+    static constexpr u8 cursorMount=10;
+    static u8 cursor = 1; 
+    static u8 cursorFixed = 0; //0表示未固定光标
+    switch (keyValue)
+    {
+    case keyCode::UP:
+        if(cursorFixed == 0)
+        {
+            if(cursor!=cursorMount)
+                ++cursor;
+            else
+                cursor=1;
+            break;
+        }
+
+    case keyCode::DOWN:
+        if(cursorFixed == 0)
+        {
+            if(cursor!=0)
+                --cursor;
+            else
+                cursor=cursorMount;
+            break;
+        }  
+    }
+}

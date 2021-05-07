@@ -37,16 +37,18 @@ private:
     list<float> TList;
     float maxT;
     float minT;
+    u8 pageId;
 
     void updateTargetLine() const;
     void drawTablePoint(uint x, uint y) const;
     void eraseTablePoint(uint x, uint y) const;
     size_t getY(float temperature) const;
+    void GUI::TargetTPage(keyCode keyValue);
 
 public:
     GUI(Screen &_screen)
         : screen(_screen), tableButtom(_screen.yMax - tableHeight), lineButtom(tableButtom + fontSize),
-          maxT(targetT+targetWidth), minT(targetT-targetWidth)
+          maxT(targetT+targetWidth), minT(targetT-targetWidth), pageId(0)
     {}
     void init() const;
     void onTChange(float newT);
