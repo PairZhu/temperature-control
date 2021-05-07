@@ -1,88 +1,82 @@
 #include "GUI.h"
 
 #include <algorithm>
-static inline bool Tequal(float lhs, float rhs) 
+#include <memory>
+
+void GUI::updateTargetLine() const
 {
-  return abs(lhs - rhs) < 0.01;
+    static uint lastTargetLine = 0;
+    if (lastTargetLine != 0)
+    {
+        screen.line(lineLeft + 1, lastTargetLine, screen.xMax, lastTargetLine,
+                    tableColor);
+        screen.point(lineLeft, lastTargetLine);
+    }
+    uint targetLine = getY(targetT) + lineButtom;
+    screen.line(lineLeft, targetLine, screen.xMax, targetLine, targetColor);
+    lastTargetLine = targetLine;
 }
 
-size_t GUI::getY(float temperature) const  //未完成
+void GUI::drawTablePoint(uint x, uint y) const
 {
-  uint TTop = (uint(maxT) / 10 + 1) * 10, TButtom = (uint(minT) / 10) * 10;
-  return (temperature - TButtom) / (TTop - TButtom) * 50 + 0.5f;
+    if (y == 0 || y > tableYMax)
+        return;
+    screen.point(x + lineLeft + 1, y + lineButtom, lineColor);
 }
 
-void GUI::updateTargetLine() const 
+void GUI::eraseTablePoint(uint x, uint y) const
 {
-  static uint lastTargetLine = 0;
-  if (lastTargetLine != 0) 
-  {
-    screen.line(lineLeft + 1, lastTargetLine, screen.xMax, lastTargetLine,
-                tableColor);
-    screen.point(lineLeft, lastTargetLine);
-  }
-  uint targetLine = getY(targetT) + lineButtom;
-  screen.line(lineLeft, targetLine, screen.xMax, targetLine, targetColor);
-  lastTargetLine = targetLine;
+    if (y == 0 || y > tableYMax)
+        return;
+    if (y == getY(targetT))
+        screen.point(x + lineLeft + 1, y + lineButtom, targetColor);
+    else
+        screen.point(x + lineLeft + 1, y + lineButtom, tableColor);
 }
 
-void GUI::drawTablePoint(uint x, uint y) const 
+void GUI::init() const
 {
-  if (y == 0 || y > tableYMax) return;
-  screen.point(x + lineLeft + 1, y + lineButtom, lineColor);
+    screen.init();
+    screen.fillRect(0, screen.yMax, screen.xMax, tableButtom, tableColor);
+    screen.line(lineLeft, lineButtom, lineLeft, screen.yMax);
+    screen.line(lineLeft, lineButtom, screen.xMax, lineButtom);
+    updateTargetLine();
 }
 
-void GUI::eraseTablePoint(uint x, uint y) const 
+void GUI::caluRange()
 {
-  if (y == 0 || y > tableYMax) return;
-  if (y == getY(targetT))
-    screen.point(x + lineLeft + 1, y + lineButtom, targetColor);
-  else
-    screen.point(x + lineLeft + 1, y + lineButtom, tableColor);
+    maxT = targetT + targetWidth, minT = targetT - targetWidth;
+    for (auto ii : TList)
+    {
+        maxT = max(ii, maxT);
+        minT = min(ii, minT);
+    }
 }
 
-void GUI::init() const 
-{
-  screen.init();
-  screen.fillRect(0, screen.yMax, screen.xMax, tableButtom, tableColor);
-  screen.line(lineLeft, lineButtom, lineLeft, screen.yMax);
-  screen.line(lineLeft, lineButtom, screen.xMax, lineButtom);
-  updateTargetLine();
-}
-
-void GUI::caluRange() 
-{
-  maxT = targetT + targetWidth, minT = targetT - targetWidth;
-  for (auto ii : TList) 
-  {
-    maxT = max(ii, maxT);
-    minT = min(ii, minT);
-  }
-}
-
-void GUI::caluPoint() 
+void GUI::caluPoint()
 {
     uint newTTop = (uint(maxT) / 10 + 1) * 10, newTButtom = (uint(minT) / 10) * 10;
-    if(newTTop!=TTop || newTButtom!=TButtom)
+    if (newTTop != TTop || newTButtom != TButtom)
     {
-        TTop=newTTop;
-        TButtom=newTButtom;
+        TTop = newTTop;
+        TButtom = newTButtom;
         updateTargetLine();
         printf("top:%d\n", TTop);
         printf("buttom:%d\n", TButtom);
     }
-  lastPointList = pointList;
-  pointList.clear();
-  for (auto ii : TList) 
-  {
-    pointList.push_back((ii - TButtom) / (TTop - TButtom) * 50 + 0.5f);
-  }
+    lastPointList = pointList;
+    pointList.clear();
+    for (auto ii : TList)
+    {
+        pointList.push_back(getY(ii));
+    }
 }
 
-void GUI::drawTable() const {
-    for (int i = 0; i < lastPointList.size(); i ++ ) 
+void GUI::drawTable() const
+{
+    for (int i = 0; i < lastPointList.size(); i++)
     {
-        if(lastPointList[i] != pointList[i]) 
+        if (lastPointList[i] != pointList[i])
         {
             eraseTablePoint(i, lastPointList[i]);
             drawTablePoint(i, pointList[i]);
@@ -90,40 +84,42 @@ void GUI::drawTable() const {
     }
 }
 
-void GUI::onTChange(float newT) 
+void GUI::onTChange(float newT)
 {
-  TList.push_back(newT);
-  if(TList.size() > tableXMax) TList.pop_front();
-  caluRange();
-  caluPoint();
-  drawTable();
+    TList.push_back(newT);
+    if (TList.size() > tableXMax)
+        TList.pop_front();
+    caluRange();
+    caluPoint();
+    drawTable();
 }
 
 void GUI::TargetTPage(keyCode keyValue)
 {
-    static constexpr u8 cursorMount=10;
-    static u8 cursor = 1; 
+    static constexpr u8 cursorMount = 10;
+    static u8 cursor = 1;
     static u8 cursorFixed = 0; //0表示未固定光标
     switch (keyValue)
     {
     case keyCode::UP:
-        if(cursorFixed == 0)
+        if (cursorFixed == 0)
         {
-            if(cursor!=cursorMount)
+            if (cursor != cursorMount)
                 ++cursor;
             else
-                cursor=1;
+                cursor = 1;
             break;
         }
 
     case keyCode::DOWN:
-        if(cursorFixed == 0)
+        if (cursorFixed == 0)
         {
-            if(cursor!=0)
+            if (cursor != 0)
                 --cursor;
             else
-                cursor=cursorMount;
+                cursor = cursorMount;
             break;
-        }  
+        }
+    default: break;
     }
 }

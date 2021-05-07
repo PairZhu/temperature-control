@@ -41,16 +41,20 @@ private:
     float minT;
     uint TTop;
     uint TButtom;
+    uint pageId;
 
     void updateTargetLine() const;
     void drawTablePoint(uint x, uint y) const;
     void eraseTablePoint(uint x, uint y) const;
-    size_t getY(float temperature) const;
-    void GUI::TargetTPage(keyCode keyValue);
+    void TargetTPage(keyCode keyValue);
 
     void caluRange();
     void caluPoint();
     void drawTable() const;
+    uint getY(float temperature) const
+    {
+        return (temperature - TButtom) / (TTop - TButtom) * 50 + 0.5f;
+    }
 
 public:
     GUI(Screen &_screen)
