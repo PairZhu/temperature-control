@@ -68,14 +68,18 @@ private:
     Screen(PinName _reset, PinName _dataCmd, PinName _cs, PinName _backLight, SPI *spi_ptr, bool _new_spi, bool _horizontal)
         : reset(_reset), dataCmd(_dataCmd), backLight(_backLight),
           spi(spi_ptr), cs(_cs), new_spi(_new_spi),
-          horizontal(_horizontal), brushColor(Color::black), backgroundColor(Color::white)
+          horizontal(_horizontal), brushColor(Color::black), backgroundColor(Color::white),
+          xMax(_horizontal?length-1:width-1),
+          yMax(_horizontal?width-1:length-1)
     {
         cs = 1;
     }
 
 public:
-    static constexpr int width = 128;
-    static constexpr int height = 160;
+    static constexpr uint width = 128;
+    static constexpr uint length = 160;
+    const uint xMax;
+    const uint yMax;
     void init();
     void setColor(uint color) { brushColor = color; }
     void setBKColor(uint color) { backgroundColor = color; }
@@ -84,10 +88,7 @@ public:
     uint getBKColor() { return backgroundColor; }
     void clear()
     {
-        if (horizontal)
-            fillRect(0, 0, height, width, backgroundColor);
-        else
-            fillRect(0, 0, width, height, backgroundColor);
+        fillRect(0, 0, xMax, yMax, backgroundColor);
     }
     void fillRect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color);
     void fillRect(uint x_beg, uint y_beg, uint x_end, uint y_end) { fillRect(x_beg, y_beg, x_end, y_end, brushColor); }

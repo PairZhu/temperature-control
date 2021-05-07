@@ -29,13 +29,16 @@ public:
             delete spi;
         }
     }
-    double readT()
+    float readT()
     {
+        cs = 0;
+        cs = 1;
+        ThisThread::sleep_for(250ms);
         spi->lock();
         cs = 0;
         spi->frequency(1000000);
         spi->format(16, 1);
-        uint response = spi->write(0xffu);
+        uint response = spi->write(0xff);
         cs = 1;
         spi->unlock();
         if (response & (1 << 2))
@@ -45,6 +48,10 @@ public:
         response &= 0xffffu;
         response &= ~(1 << 15);
         response >>= 3;
+        if (response<40 || response>400)
+        {
+            return -1;
+        }
         return response * 0.25;
     }
 };

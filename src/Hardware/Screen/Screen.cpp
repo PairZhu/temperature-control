@@ -26,10 +26,14 @@ void Screen::setAddress(uint x_beg, uint y_beg, uint x_end, uint y_end)
 
 void Screen::fillRect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color)
 {
-    setAddress(x_beg, y_beg, x_end - 1, y_end - 1);
-    for (uint x = x_beg; x != x_end; ++x)
+    if(x_beg>x_end) swap(x_beg,x_end);
+    if(y_beg>y_end) swap(y_beg,y_end);
+    if(x_beg>xMax) x_beg=xMax;
+    if(y_beg>yMax) y_beg=yMax; 
+    setAddress(x_beg, y_beg, x_end, y_end);
+    for (uint x = x_beg; x <= x_end; ++x)
     {
-        for (uint y = y_beg; y != y_end; ++y)
+        for (uint y = y_beg; y <= y_end; ++y)
         {
             writeColor(color);
         }
@@ -38,8 +42,58 @@ void Screen::fillRect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color
 
 void Screen::point(uint x, uint y, uint color)
 {
+    if(x>xMax || y>yMax) return;
     setAddress(x, y, x, y);
     writeColor(color);
+}
+
+void Screen::line(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color)
+{
+    if(x_beg==x_end || y_beg==y_end) fillRect(x_beg,y_beg,x_end,y_end,color);
+    int x, y;
+    int dx = x_end - x_beg, dy = y_end - y_beg;
+    if (dx < 0)
+        dx = -dx;
+    if (dy < 0)
+        dy = -dy;
+    int p = 2 * dy - dx;
+    int twody = 2 * dy, twodysubdx = 2 * (dy - dx);
+
+    if (x_beg > x_end)
+    {
+        x = x_end;
+        y = y_end;
+        x_end = x_beg;
+        y_end = y_beg;
+    }
+    else
+    {
+        x = x_beg;
+        y = y_beg;
+    }
+    point(x, y, color);
+    while (x < x_end)
+    {
+        x++;
+        if (p < 0)
+        {
+            p += twody;
+        }
+        else
+        {
+            y++;
+            p += twodysubdx;
+        }
+        point(x, y, color);
+    }
+}
+
+void Screen::rect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color)
+{
+    line(x_beg, y_beg, x_end, y_beg, color);
+    line(x_beg, y_end, x_end, y_end, color);
+    line(x_beg, y_beg, x_beg, y_end, color);
+    line(x_end, y_beg, x_end, y_end, color);
 }
 
 void Screen::init()
@@ -136,52 +190,4 @@ void Screen::init()
     //开始绘制页面
     writeCmd(0x29);
     clear();
-}
-
-void Screen::line(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color)
-{
-    int x, y;
-    int dx = x_end - x_beg, dy = y_end - y_beg;
-    if (dx < 0)
-        dx = -dx;
-    if (dy < 0)
-        dy = -dy;
-    int p = 2 * dy - dx;
-    int twody = 2 * dy, twodysubdx = 2 * (dy - dx);
-
-    if (x_beg > x_end)
-    {
-        x = x_end;
-        y = y_end;
-        x_end = x_beg;
-        y_end = y_beg;
-    }
-    else
-    {
-        x = x_beg;
-        y = y_beg;
-    }
-    point(x, y, color);
-    while (x < x_end)
-    {
-        x++;
-        if (p < 0)
-        {
-            p += twody;
-        }
-        else
-        {
-            y++;
-            p += twodysubdx;
-        }
-        point(x, y, color);
-    }
-}
-
-void Screen::rect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color)
-{
-    line(x_beg, y_beg, x_end, y_beg, color);
-    line(x_beg, y_end, x_end, y_end, color);
-    line(x_beg, y_beg, x_beg, y_end, color);
-    line(x_end, y_beg, x_end, y_end, color);
 }
