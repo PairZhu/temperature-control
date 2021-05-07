@@ -46,6 +46,7 @@ private:
     void drawTablePoint(uint x, uint y) const;
     void eraseTablePoint(uint x, uint y) const;
     size_t getY(float temperature) const;
+    void GUI::TargetTPage(keyCode keyValue);
 
     void caluRange();
     void caluPoint();
@@ -54,7 +55,7 @@ private:
 public:
     GUI(Screen &_screen)
         : screen(_screen), tableButtom(_screen.yMax - tableHeight), lineButtom(tableButtom + fontSize),
-          maxT(targetT+targetWidth), minT(targetT-targetWidth)
+          maxT(targetT+targetWidth), minT(targetT-targetWidth), pageId(0)
     {}
     void init() const;
     void onTChange(float newT);
