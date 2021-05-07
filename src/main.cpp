@@ -22,7 +22,7 @@ void measureT()
     while(1)
     {
         //float newT = tsensor.readT();
-        float newT = lastT+(rand()%200-50)/100.0f;
+        float newT = lastT+(rand()%200-20)/100.0f;
         newT=(int(newT*100)%10000)/100;
         if(newT<0)
         {

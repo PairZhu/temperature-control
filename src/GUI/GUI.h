@@ -2,6 +2,7 @@
 #define __GUI_H__
 #include "mbed.h"
 #include <list>
+#include <vector>
 #include <algorithm>
 #include "Screen.h"
 
@@ -38,6 +39,8 @@ private:
     list<float> TList;
     float maxT;
     float minT;
+    uint TTop;
+    uint TButtom;
 
     void updateTargetLine() const;
     void drawTablePoint(uint x, uint y) const;
