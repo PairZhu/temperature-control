@@ -2,6 +2,7 @@
 #define __GUI_H__
 #include "mbed.h"
 #include <list>
+#include <vector>
 #include <algorithm>
 #include "Screen.h"
 
@@ -33,17 +34,23 @@ private:
     const uint lineButtom;
 
     Screen &screen;
-    list<uint> pointList;
+    vector<uint> pointList;
+    vector<uint> lastPointList;
     list<float> TList;
     float maxT;
     float minT;
-    u8 pageId;
+    uint TTop;
+    uint TButtom;
 
     void updateTargetLine() const;
     void drawTablePoint(uint x, uint y) const;
     void eraseTablePoint(uint x, uint y) const;
     size_t getY(float temperature) const;
     void GUI::TargetTPage(keyCode keyValue);
+
+    void caluRange();
+    void caluPoint();
+    void drawTable() const;
 
 public:
     GUI(Screen &_screen)
