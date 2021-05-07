@@ -14,9 +14,9 @@ PwmOut Fanner(D2);
 
 float targetT=40;
 
-double kp = 0.07;
-double ki = 0.001;
-double kd = 0.01;
+double kp = 0.1;
+double ki = 0.01;
+double kd = 0.1;
 double t_integral=0;
 
 // main() runs in its own thread in the OS
@@ -26,14 +26,15 @@ void PID(float newT)
     double res = 0;
 	double error = targetT - newT;
 	res += kp * error;
-	t_integral += error;
+    if(t_integral<30/ki*TSensor::periodMs)
+	    t_integral += error;
 	res += ki * t_integral * TSensor::periodMs;
 	res += kd * (error - last_error) / TSensor::periodMs;
 	last_error = error;
 	
     if(res>1) res=1.0f;
     if(res<1) res=-1.0f;
-
+    printf("100*pid:%d\n",int(res*100));
     if(res>0)
     {
         Resistor.write(res);
