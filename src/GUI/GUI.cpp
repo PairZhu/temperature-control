@@ -13,9 +13,17 @@ void GUI::init() const
     updateTargetLine();
     updateTableStr();
     //显示当前温度和目标温度
-    screen.showStr("Temp:  .  ~",3*fontWidth,tableButtom);
-    screen.showStr("Target:",fontWidth,tableButtom-fontHeight);
+    screen.showStr("Temp:--.--~",5*fontWidth,tableButtom);
+    screen.showStr("Target:  ~",3*fontWidth,tableButtom-fontHeight);
+    updateTargetTStr();
 }
+
+void GUI::updateTargetTStr() const
+{
+    char tensPlace = targetT/10, onesPlace = targetT%10;
+    
+}
+
 
 void GUI::updateTargetLine() const
 {
@@ -49,55 +57,31 @@ void GUI::eraseTablePoint(uint x, uint y) const
 
 void GUI::updateTStr(float temperture) const
 {
-    static string lastIntStr="  ";
-    static string lastDecimalStr="  ";
+    static string lastTStr="--.--~";
     string intStr=to_string(int(temperture));
     string decimalStr=to_string(int(temperture*100)%100);
-    if(intStr.length()<2)
-        intStr='0'+intStr;
     if(decimalStr.length()<2)
         decimalStr='0'+decimalStr;
-    uint x=8*fontWidth;
-    for(uint i=0;i!=2;++i,x+=fontWidth)
-    {
-        if(intStr[i]!=lastIntStr[i])
-        {
-            screen.showStr(string(1,lastIntStr[i]),x,tableButtom,Color::white);
-            screen.showStr(string(1,intStr[i]),x,tableButtom);
-        }
-    }
-    x=11*fontWidth;
-    for(uint i=0;i!=2;++i,x+=fontWidth)
-    {
-        if(decimalStr[i]!=lastDecimalStr[i])
-        {
-            screen.showStr(string(1,lastDecimalStr[i]),x,tableButtom,Color::white);
-            screen.showStr(string(1,decimalStr[i]),x,tableButtom);
-        }
-    }
-    lastIntStr=intStr;
-    lastDecimalStr=decimalStr;
-}
-
-void updateTargetStr()
-{
-
+    string TStr = intStr + '.' + decimalStr + '~';
+    screen.refreshStr(TStr, 10*fontWidth, tableButtom, lastTStr);
+    lastTStr = TStr;
 }
 
 void GUI::updateTableStr() const
 {
     static string lastTopStr="";
     static string lastButtomStr="";
-    if(lastTopStr!="" || lastButtomStr!="")
-    {
-        screen.showStr(lastTopStr,0,screen.yMax,tableColor);
-        screen.showStr(lastButtomStr,0,lineButtom,tableColor);
-    }
     string topStr=to_string(TTop),buttomStr=to_string(TButtom);
+    while(topStr.size()<3)
+        topStr=' '+topStr;
+    topStr+='~';
+    while(buttomStr.size()<3)
+        buttomStr=' '+buttomStr;
+    buttomStr+='~';
+    screen.refreshStr(topStr, 0, screen.yMax, lastTopStr, tableColor);
+    screen.refreshStr(buttomStr, 0, lineButtom, lastButtomStr, tableColor);
     lastTopStr=topStr;
     lastButtomStr=buttomStr;
-    screen.showStr(topStr,0,screen.yMax);
-    screen.showStr(buttomStr,0,lineButtom);
 }
 
 void GUI::caluRange()

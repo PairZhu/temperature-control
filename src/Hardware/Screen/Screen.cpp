@@ -102,7 +102,7 @@ void Screen::rect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color)
     line(x_end, y_beg, x_end, y_end, color);
 }
 
-void Screen::showChar(char ch, uint lrx, uint lry, uint color)
+void Screen::showChar(char ch, uint lrx, uint lry, uint color, int BKColor)
 {
     if(ch==' ') return;
     const vector<u8> &chData = fontMap[ch];
@@ -110,24 +110,43 @@ void Screen::showChar(char ch, uint lrx, uint lry, uint color)
     for (u8 data : chData)
     {
         uint x = lrx;
-        for (u8 i = 1; i != 0x00; i <<= 1,++x)
+        for (u8 i = 1; i != 1<<6; i <<= 1,++x)
         {
             if (data & i)
             {
                 point(x, y, color);
+            }
+            else if(BKColor>=0)
+            {
+                point(x, y, BKColor);
             }
         }
         --y;
     }
 }
 
-void Screen::showStr(string str, uint lrx, uint lry, uint color)
+void Screen::showStr(string str, uint lrx, uint lry, uint color, int BKColor)
 {
     uint x=lrx;
     for(auto ch:str)
     {
-        showChar(ch, x, lry, color);
+        showChar(ch, x, lry, color, BKColor);
         x+=Font::fontWidth;
+    }
+}
+
+void Screen::refreshStr(string newStr ,uint x, uint y, string lastStr, uint BKColor)
+{
+    while(newStr.size()>lastStr.size())
+        lastStr+=' ';
+    while(lastStr.size()>newStr.size())
+        newStr+=' ';
+    for(uint i=0;i!=newStr.size();++i,x+=Font::fontWidth)
+    {
+        if(newStr[i]!=lastStr[i])
+        {
+            showChar(newStr[i],x,y,brushColor,BKColor);
+        }
     }
 }
 

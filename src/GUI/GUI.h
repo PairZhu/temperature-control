@@ -7,7 +7,9 @@
 #include <algorithm>
 #include "Screen.h"
 
-extern float targetT;
+extern size_t targetT;
+extern Mutex controlFlagMutex;
+extern bool controlFlag;
 
 class GUI
 {
@@ -29,7 +31,7 @@ private:
     static constexpr uint fontWidth = Font::fontWidth;
     static constexpr uint tableYMax = 50;
     static constexpr uint tableXMax = 100;
-    static constexpr uint lineLeft = 3*fontWidth;
+    static constexpr uint lineLeft = 4*fontWidth+2;
     static constexpr float targetWidth = 5.0f;
 
     const uint tableButtom;
@@ -43,11 +45,11 @@ private:
     float minT;
     uint TTop;
     uint TButtom;
-    uint pageId;
 
     void updateTableStr() const;
     void updateTargetLine() const;
     void updateTStr(float temperture)const;
+    void updateTargetTStr() const;
     void drawTablePoint(uint x, uint y) const;
     void eraseTablePoint(uint x, uint y) const;
     void TargetTPage(keyCode keyValue);
@@ -55,6 +57,7 @@ private:
     void caluRange();
     void caluPoint();
     void drawTable() const;
+
     uint getY(float temperature) const
     {
         return (temperature - TButtom) / (TTop - TButtom) * 50 + 0.5f;
@@ -64,7 +67,7 @@ public:
     GUI(Screen &_screen)
         : screen(_screen), tableButtom(_screen.yMax - tableHeight), lineButtom(tableButtom + fontHeight),
           maxT(targetT+targetWidth), minT(targetT-targetWidth), TTop((uint(maxT) / 10 + 1) * 10),
-          TButtom((uint(minT) / 10) * 10), pageId(0)
+          TButtom((uint(minT) / 10) * 10)
     {}
     void init() const;
     void onTChange(float newT);

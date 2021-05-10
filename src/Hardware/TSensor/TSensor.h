@@ -2,6 +2,7 @@
 #define __TSENSOR_H__
 #include "mbed.h"
 #include "Thread.h"
+#include <algorithm>
 
 class TSensor
 {
@@ -11,11 +12,13 @@ private:
     DigitalOut cs;
     SPI *const spi;
     const bool new_spi;
+    float lastT;
     TSensor(PinName _cs, SPI *spi_ptr, bool _new_spi)
         : cs(_cs), spi(spi_ptr), new_spi(_new_spi)
     {
         cs = 1;
     }
+    float measure();
 
 public:
     static constexpr uint periodMs = 220;
@@ -26,35 +29,11 @@ public:
     ~TSensor()
     {
         if (new_spi)
-        {
             delete spi;
-        }
     }
-    float readT()
-    {
-        cs = 0;
-        cs = 1;
-        ThisThread::sleep_for(periodMs*1ms);
-        spi->lock();
-        cs = 0;
-        spi->frequency(1000000);
-        spi->format(16, 1);
-        uint response = spi->write(0xff);
-        cs = 1;
-        spi->unlock();
-        if (response & (1 << 2))
-        {
-            return -1.0f;
-        }
-        response &= 0xffffu;
-        response &= ~(1 << 15);
-        response >>= 3;
-        if (response<40 || response>400)
-        {
-            return -1;
-        }
-        return response * 0.25;
-    }
+    float getLastT() { return lastT; }
+    float readT();
+    void init(uint initCnt=10);
 };
 
 #endif

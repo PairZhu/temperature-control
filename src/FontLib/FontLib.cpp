@@ -2,7 +2,8 @@
 
 std::vector<unsigned char> Font::operator[](char ch) const
 {
-    const unsigned char *res;
+    constexpr unsigned char defaultFont[12] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    const unsigned char *res = defaultFont;
     if (ch >= '0' && ch <= '9')
         res = FONTARR[ch - '0'];
     else if (ch >= 'a' && ch <= 'z')
@@ -13,10 +14,11 @@ std::vector<unsigned char> Font::operator[](char ch) const
         res = FONTARR[62];
     else if (ch == ':')
         res = FONTARR[63];
-    else if (ch == '~')
+    else if (ch == '-')
         res = FONTARR[64];
-    else
+    else if (ch == '~')
         res = FONTARR[65];
+
     return vector<unsigned char>(res, res + 12);
 }
 

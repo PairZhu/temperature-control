@@ -67,7 +67,6 @@ private:
         write(color);
     }
     void setAddress(uint x_beg, uint y_beg, uint x_end, uint y_end);
-    void showChar(char ch, uint lrx, uint lry, uint color);
     Screen(PinName _reset, PinName _dataCmd, PinName _cs, PinName _backLight, SPI *spi_ptr, bool _new_spi, bool _horizontal)
         : reset(_reset), dataCmd(_dataCmd), backLight(_backLight),
           spi(spi_ptr), cs(_cs), new_spi(_new_spi),
@@ -101,8 +100,11 @@ public:
     void point(uint x, uint y) { point(x, y, brushColor); }
     void line(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color);
     void line(uint x_beg, uint y_beg, uint x_end, uint y_end) { line(x_beg, y_beg, x_end, y_end, brushColor); }
-    void showStr(string str, uint lrx, uint lry, uint color);
-    void showStr(string str, uint lrx, uint lry) {showStr(str, lrx, lry, brushColor);}
+    void showChar(char ch, uint lrx, uint lry, uint color, int BKColor=-1);
+    void showChar(char ch, uint lrx, uint lry) {showChar(ch,lrx,lry,brushColor);}
+    void showStr(string str, uint lrx, uint lry, uint color, int BKColor=-1);
+    void showStr(string str, uint lrx, uint lry) {showStr(str,lrx,lry,brushColor);}
+    void refreshStr(string newStr ,uint x, uint y, string lastStr, uint BKColor = Color::white);
     Screen(PinName _reset, PinName _dataCmd, PinName _cs, PinName _backLight, bool _horizontal = false, PinName sck = D13)
         : Screen(_reset, _dataCmd, _cs, _backLight, new SPI(D11, NC, sck), true, _horizontal) {}
     Screen(PinName _reset, PinName _dataCmd, PinName _cs, PinName _backLight, SPI &_spi, bool _horizontal = false)
