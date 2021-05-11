@@ -70,19 +70,19 @@ void GUI::showOptionChar(char ch, u8 this_cursor, uint x, uint y)
 
 void GUI::updateTargetLine()
 {
-    static Mutex mutex;
-    mutex.lock();
-    const size_t targetT = getTargetT();
     static uint lastTargetLine = 0;
-    if (lastTargetLine != 0) //删除之前的目标温度线
-    {
-        screen.line(lineLeft + 1, lastTargetLine, screen.xMax, lastTargetLine, tableColor);
-        screen.point(lineLeft, lastTargetLine);
-    }
+    const size_t targetT = getTargetT();
     uint targetLine = getY(targetT) + lineButtom;
-    screen.line(lineLeft, targetLine, screen.xMax, targetLine, targetColor);
+    if (lastTargetLine != targetLine) //是否需要更新
+    {
+        if(lastTargetLine != 0 ) //删除之前的目标温度线
+        {
+            screen.line(lineLeft + 1, lastTargetLine, screen.xMax, lastTargetLine, tableColor);
+            screen.point(lineLeft, lastTargetLine);
+        }
+        screen.line(lineLeft, targetLine, screen.xMax, targetLine, targetColor);
+    }
     lastTargetLine = targetLine;
-    mutex.unlock();
 }
 
 void GUI::drawTablePoint(uint x, uint y)
@@ -175,6 +175,7 @@ void GUI::onTChange(float newT)
     caluRange();
     caluPoint();
     drawTable();
+    updateTargetLine();
 }
 
 void GUI::onKeyDown(KeyCode keyValue)
@@ -236,7 +237,6 @@ void GUI::onKeyDown(KeyCode keyValue)
         default:
             break;
         }
-        updateTargetLine();
     }
     else
     {
