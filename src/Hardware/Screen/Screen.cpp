@@ -104,7 +104,7 @@ void Screen::rect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color)
 
 void Screen::showChar(char ch, uint lrx, uint lry, uint color, int BKColor)
 {
-    if(ch==' ') return;
+    if(ch==' ' && BKColor<0) return;
     const vector<u8> &chData = fontMap[ch];
     uint y = lry;
     for (u8 data : chData)

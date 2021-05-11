@@ -3,16 +3,24 @@
 
 float TSensor::measure()
 {
-    cs = 0;
-    cs = 1;
+
+    spi.select();
+    //cs=0;
+    //cs=1;
+    spi.deselect();
+    
     ThisThread::sleep_for(periodMs*1ms);
-    spi->lock();
-    cs = 0;
-    spi->frequency(1000000);
-    spi->format(16, 1);
-    uint response = spi->write(0xff);
-    cs = 1;
-    spi->unlock();
+
+
+    //cs=0;
+
+    spi.frequency(1000000);
+    spi.format(16, 1);
+    uint response = spi.write(0xff);
+
+    //cs=1;
+
+
     if (response & (1 << 2))
     {
         return -1.0f;

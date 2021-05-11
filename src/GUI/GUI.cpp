@@ -13,17 +13,44 @@ void GUI::init() const
     updateTargetLine();
     updateTableStr();
     //显示当前温度和目标温度
-    screen.showStr("Temp:--.--~",5*fontWidth,tableButtom);
-    screen.showStr("Target:  ~",3*fontWidth,tableButtom-fontHeight);
+    screen.showStr("Temp:--.--~",5*fontWidth,tempStrTop);
+    screen.showStr("Target:     ~",3*fontWidth,targetStrTop);
     updateTargetTStr();
+}
+
+void GUI::updateTStr(float temperture) const
+{
+    static string lastTStr="--.--~";
+    string intStr=to_string(int(temperture));
+    string decimalStr=to_string(int(temperture*100)%100);
+    if(decimalStr.length()<2)
+        decimalStr='0'+decimalStr;
+    string TStr = intStr + '.' + decimalStr + '~';
+    screen.refreshStr(TStr, 10*fontWidth, tempStrTop, lastTStr);
+    lastTStr = TStr;
 }
 
 void GUI::updateTargetTStr() const
 {
-    char tensPlace = targetT/10, onesPlace = targetT%10;
-    
+    char tensPlace = targetT/10 + '0', onesPlace = targetT%10 + '0';
+    showOptionChar(tensPlace, 0, 11*fontWidth, targetStrTop);
+    showOptionChar(onesPlace, 1, 13*fontWidth, targetStrTop);
 }
 
+void GUI::showOptionChar(char ch, u8 this_cursor, uint x, uint y) const
+{
+    if(cursor == this_cursor)
+    {
+        if(cursorFixed)
+            screen.showChar(ch, x, y, Color::black, fixedColor);
+        else
+            screen.showChar(ch, x, y, Color::black, cursorColor);
+    }
+    else
+    {
+        screen.showChar(ch, x, y, Color::black, optionColor);
+    }
+}
 
 void GUI::updateTargetLine() const
 {
@@ -53,18 +80,6 @@ void GUI::eraseTablePoint(uint x, uint y) const
         screen.point(x + lineLeft + 1, y + lineButtom, targetColor);
     else
         screen.point(x + lineLeft + 1, y + lineButtom, tableColor);
-}
-
-void GUI::updateTStr(float temperture) const
-{
-    static string lastTStr="--.--~";
-    string intStr=to_string(int(temperture));
-    string decimalStr=to_string(int(temperture*100)%100);
-    if(decimalStr.length()<2)
-        decimalStr='0'+decimalStr;
-    string TStr = intStr + '.' + decimalStr + '~';
-    screen.refreshStr(TStr, 10*fontWidth, tableButtom, lastTStr);
-    lastTStr = TStr;
 }
 
 void GUI::updateTableStr() const
@@ -140,32 +155,77 @@ void GUI::onTChange(float newT)
     drawTable();
 }
 
-void GUI::TargetTPage(keyCode keyValue)
+void GUI::onKeyDown(KeyCode keyValue)
 {
-    static constexpr u8 cursorMount = 10;
-    static u8 cursor = 1;
-    static u8 cursorFixed = 0; //0表示未固定光标
-    switch (keyValue)
+    static constexpr u8 optionAmount = 2;
+    if(cursorFixed)
     {
-    case keyCode::UP:
-        if (cursorFixed == 0)
+        switch(keyValue)
         {
-            if (cursor != cursorMount)
-                ++cursor;
-            else
-                cursor = 1;
+        case KeyCode::ENTER :
+            cursorFixed = false;
+            break;
+        case KeyCode::UP :
+            switch(cursor)
+            {
+            case 0:
+                if(targetT<90)
+                    targetT+=10;
+                else
+                    targetT-=70;
+                break;
+            case 1:
+                if(targetT%10<9)
+                    ++targetT;
+                else
+                    targetT-=9;
+                break;
+            default:
+                break;
+            }
+            break;
+        case KeyCode::DOWN :
+            switch(cursor)
+            {
+            case 0:
+                if(targetT>=30)
+                    targetT-=10;
+                else
+                    targetT+=70;
+                break;
+            case 1:
+                if(targetT%10>=1)
+                    --targetT;
+                else
+                    targetT+=9;
+                break;
+            default:
+                break;
+            }
+            break;
+        default:
             break;
         }
-
-    case keyCode::DOWN:
-        if (cursorFixed == 0)
+    }
+    else
+    {
+        switch(keyValue)
         {
-            if (cursor != 0)
+        case KeyCode::ENTER :
+            cursorFixed = true;
+            break;
+        case KeyCode::UP :
+            cursor = (cursor+1)%optionAmount;
+            break;
+        case KeyCode::DOWN :
+            if(cursor>0)
                 --cursor;
             else
-                cursor = cursorMount;
+                cursor = optionAmount - 1;
+            break;
+        default:
             break;
         }
-    default: break;
     }
+    updateTargetTStr();
 }

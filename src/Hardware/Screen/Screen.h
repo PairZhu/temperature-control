@@ -5,6 +5,8 @@
 #include <iostream>
 #include "FontLib.h"
 
+extern bool spiLock;
+
 namespace Color
 {
     enum
@@ -22,7 +24,7 @@ namespace Color
         brown = 0xbc40,
         yellow = 0xffe0,
         cyan = 0x7fff,
-        orange = 0xffa5
+        orange = 0xfd8a
     };
 }
 
@@ -35,20 +37,21 @@ private:
     DigitalOut reset;
     DigitalOut dataCmd;
     DigitalOut backLight;
-    SPI *const spi;
-    const bool new_spi;
+    SPI spi;
     const bool horizontal; //水平显示
     uint brushColor;       //当前画笔颜色
     uint backgroundColor;  //背景色
     void write(u8 data)    //写入8位
     {
-        spi->lock();
-        cs = 0;
-        spi->frequency(1000000);
-        spi->format(8, 0);
-        spi->write(data);
-        cs = 1;
-        spi->unlock();
+        //cs=0;
+
+        spi.frequency(1000000);
+        spi.format(8, 0);
+        spi.write(data);
+
+
+        //cs=1;
+
     }
     void writeCmd(u8 cmd)
     {
@@ -67,15 +70,6 @@ private:
         write(color);
     }
     void setAddress(uint x_beg, uint y_beg, uint x_end, uint y_end);
-    Screen(PinName _reset, PinName _dataCmd, PinName _cs, PinName _backLight, SPI *spi_ptr, bool _new_spi, bool _horizontal)
-        : reset(_reset), dataCmd(_dataCmd), backLight(_backLight),
-          spi(spi_ptr), cs(_cs), new_spi(_new_spi),
-          horizontal(_horizontal), brushColor(Color::black), backgroundColor(Color::white),
-          xMax(_horizontal?length-1:width-1),
-          yMax(_horizontal?width-1:length-1)
-    {
-        cs = 1;
-    }
 
 public:
     static constexpr uint width = 128;
@@ -85,7 +79,6 @@ public:
     void init();
     void setColor(uint color) { brushColor = color; }
     void setBKColor(uint color) { backgroundColor = color; }
-    SPI *getSpi() { return spi; }
     uint getColor() { return brushColor; }
     uint getBKColor() { return backgroundColor; }
     void clear()
@@ -105,10 +98,15 @@ public:
     void showStr(string str, uint lrx, uint lry, uint color, int BKColor=-1);
     void showStr(string str, uint lrx, uint lry) {showStr(str,lrx,lry,brushColor);}
     void refreshStr(string newStr ,uint x, uint y, string lastStr, uint BKColor = Color::white);
-    Screen(PinName _reset, PinName _dataCmd, PinName _cs, PinName _backLight, bool _horizontal = false, PinName sck = D13)
-        : Screen(_reset, _dataCmd, _cs, _backLight, new SPI(D11, NC, sck), true, _horizontal) {}
-    Screen(PinName _reset, PinName _dataCmd, PinName _cs, PinName _backLight, SPI &_spi, bool _horizontal = false)
-        : Screen(_reset, _dataCmd, _cs, _backLight, &_spi, false, _horizontal) {}
+    Screen(PinName _reset, PinName _dataCmd, PinName _cs, PinName _backLight, PinName* _spi, bool _horizontal = false)
+        : reset(_reset), dataCmd(_dataCmd), backLight(_backLight),
+          spi(_spi[0],_spi[1],_spi[2],_cs,use_gpio_ssel), cs(_cs),
+          horizontal(_horizontal), brushColor(Color::black), backgroundColor(Color::white),
+          xMax(_horizontal?length-1:width-1),
+          yMax(_horizontal?width-1:length-1)
+    {
+        cs = 1;
+    }
 };
 
 #endif
