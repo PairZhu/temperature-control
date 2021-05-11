@@ -4,8 +4,6 @@
 #include "Thread.h"
 #include <algorithm>
 
-extern bool spiLock;
-
 class TSensor
 {
 private:
@@ -22,6 +20,8 @@ public:
         : spi(_spi[0],_spi[1],_spi[2],_cs,use_gpio_ssel), cs(_cs)
     {
         cs = 1;
+        spi.frequency(1000000);
+        spi.format(16, 1);
     }
     float getLastT() { return lastT; }
     float readT();

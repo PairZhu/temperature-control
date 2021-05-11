@@ -26,6 +26,7 @@ void Screen::setAddress(uint x_beg, uint y_beg, uint x_end, uint y_end)
 
 void Screen::fillRect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color)
 {
+    mutex.lock();
     if (x_beg > x_end)
         swap(x_beg, x_end);
     if (y_beg > y_end)
@@ -42,14 +43,17 @@ void Screen::fillRect(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color
             writeColor(color);
         }
     }
+    mutex.unlock();
 }
 
 void Screen::point(uint x, uint y, uint color)
 {
+    mutex.lock();
     if (x > xMax || y > yMax)
         return;
     setAddress(x, y, x, y);
     writeColor(color);
+    mutex.unlock();
 }
 
 void Screen::line(uint x_beg, uint y_beg, uint x_end, uint y_end, uint color)
@@ -152,6 +156,7 @@ void Screen::refreshStr(string newStr ,uint x, uint y, string lastStr, uint BKCo
 
 void Screen::init()
 {
+    mutex.lock();
     reset = 0;
     ThisThread::sleep_for(100ms);
     reset = 1;
@@ -244,4 +249,5 @@ void Screen::init()
     //开始绘制页面
     writeCmd(0x29);
     clear();
+    mutex.unlock();
 }

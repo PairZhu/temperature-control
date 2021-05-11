@@ -7,16 +7,18 @@
 #include <algorithm>
 #include "Screen.h"
 
-extern size_t targetT;
-extern Mutex controlFlagMutex;
-extern bool controlFlag;
+size_t getTargetT();
+void setTargetT(size_t value);
+extern size_t _targetT;
+
+bool getControlFlag();
+void setControlFlag(bool value);
 
 enum class KeyCode
 {
     UP = 0,
     DOWN = 1,
-    CANCEL = 2,
-    ENTER = 3
+    ENTER = 2,
 };
 
 class GUI
@@ -43,8 +45,9 @@ private:
     const uint lineButtom;
     const uint tempStrTop;
     const uint targetStrTop;
+    const uint bottonTop;
 
-    Screen &screen;
+    Screen& screen;
     vector<uint> pointList;
     vector<uint> lastPointList;
     list<float> TList;
@@ -53,22 +56,52 @@ private:
     uint TTop;
     uint TButtom;
 
-    u8 cursor = 0;
-    bool cursorFixed = true;
-
-    void updateTableStr() const;
-    void updateTargetLine() const;
-    void updateTStr(float temperture)const;
-    void updateTargetTStr() const;
-    void drawTablePoint(uint x, uint y) const;
-    void eraseTablePoint(uint x, uint y) const;
-    void showOptionChar(char ch, u8 this_cursor, uint x, uint y) const;
+    void updateTargetLine();
+    void updateTargetTStr();
+    void updateTableStr();
+    void updateBotton();
+    void updateTStr(float temperture);
+    void drawTablePoint(uint x, uint y);
+    void eraseTablePoint(uint x, uint y);
+    void showOptionChar(char ch, u8 this_cursor, uint x, uint y);
 
     void caluRange();
     void caluPoint();
-    void drawTable() const;
+    void drawTable();
 
-    uint getY(float temperature) const
+    Mutex cursorMutex;
+    u8 _cursor = 0;
+    u8 getCursor()
+    {
+        cursorMutex.lock();
+        u8 res=_cursor;
+        cursorMutex.unlock();
+        return res;
+    }
+    void setCursor(u8 value)
+    {
+        cursorMutex.lock();
+        _cursor=value;
+        cursorMutex.unlock();
+    }
+
+    Mutex cursorFixedMutex;
+    bool _cursorFixed = false;
+    bool getCursorFixed()
+    {
+        cursorFixedMutex.lock();
+        bool res=_cursorFixed;
+        cursorFixedMutex.unlock();
+        return res;
+    }
+    void setCursorFixed(bool value)
+    {
+        cursorFixedMutex.lock();
+        _cursorFixed=value;
+        cursorFixedMutex.unlock();
+    }
+
+    uint getY(float temperature)
     {
         return (temperature - TButtom) / (TTop - TButtom) * 50 + 0.5f;
     }
@@ -77,13 +110,18 @@ public:
     GUI(Screen &_screen)
         : screen(_screen),
           tableButtom(_screen.yMax - tableHeight), lineButtom(tableButtom + fontHeight),
-          tempStrTop(tableButtom-2*fontHeight), targetStrTop(tableButtom-3*fontHeight),
-          maxT(targetT+targetWidth), minT(targetT-targetWidth),
-          TTop((uint(maxT) / 10 + 1) * 10), TButtom((uint(minT) / 10) * 10)
-    {}
-    void init() const;
+          tempStrTop(tableButtom-2*fontHeight), targetStrTop(tableButtom-3*fontHeight), bottonTop(2.5*fontHeight)
+    {
+        const size_t targetT = _targetT;
+        maxT = targetT+targetWidth;
+        minT = targetT-targetWidth;
+        TTop = (uint(maxT) / 10 + 1) * 10;
+        TButtom = (uint(minT) / 10) * 10;
+    }
+    void init();
     void onTChange(float newT);
     void onKeyDown(KeyCode keyValue);
+    
 };
 
 #endif // !__GUI_H__

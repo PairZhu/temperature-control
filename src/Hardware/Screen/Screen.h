@@ -5,8 +5,6 @@
 #include <iostream>
 #include "FontLib.h"
 
-extern bool spiLock;
-
 namespace Color
 {
     enum
@@ -41,33 +39,22 @@ private:
     const bool horizontal; //水平显示
     uint brushColor;       //当前画笔颜色
     uint backgroundColor;  //背景色
-    void write(u8 data)    //写入8位
-    {
-        //cs=0;
-
-        spi.frequency(1000000);
-        spi.format(8, 0);
-        spi.write(data);
-
-
-        //cs=1;
-
-    }
+    Mutex mutex;
     void writeCmd(u8 cmd)
     {
         dataCmd = 0;
-        write(cmd);
+        spi.write(cmd);
     }
     void writeData(u8 data)
     {
         dataCmd = 1;
-        write(data);
+        spi.write(data);
     }
     void writeColor(uint color)
     {
         dataCmd = 1;
-        write(color >> 8);
-        write(color);
+        spi.write(color >> 8);
+        spi.write(color);
     }
     void setAddress(uint x_beg, uint y_beg, uint x_end, uint y_end);
 
@@ -77,8 +64,18 @@ public:
     const uint xMax;
     const uint yMax;
     void init();
-    void setColor(uint color) { brushColor = color; }
-    void setBKColor(uint color) { backgroundColor = color; }
+    void setColor(uint color) 
+    {
+        mutex.lock();
+        brushColor = color;
+        mutex.unlock();
+    }
+    void setBKColor(uint color)
+    {
+        mutex.lock();
+        backgroundColor = color;
+        mutex.unlock();
+    }
     uint getColor() { return brushColor; }
     uint getBKColor() { return backgroundColor; }
     void clear()
@@ -106,6 +103,8 @@ public:
           yMax(_horizontal?width-1:length-1)
     {
         cs = 1;
+        spi.frequency(1000000);
+        spi.format(8, 0);
     }
 };
 

@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <string>
 
-void GUI::init() const
+void GUI::init()
 {
     //画图表
     screen.init();
@@ -16,9 +16,22 @@ void GUI::init() const
     screen.showStr("Temp:--.--~",5*fontWidth,tempStrTop);
     screen.showStr("Target:     ~",3*fontWidth,targetStrTop);
     updateTargetTStr();
+    updateBotton();
 }
 
-void GUI::updateTStr(float temperture) const
+void GUI::updateBotton()
+{
+    const bool controlFlag = getControlFlag();
+    string str = controlFlag ? " PAUSE " : " START ";
+    uint x=43;
+    for(char ch:str)
+    {
+        showOptionChar(ch, 2, x, bottonTop);
+        x+=fontWidth;
+    }
+}
+
+void GUI::updateTStr(float temperture)
 {
     static string lastTStr="--.--~";
     string intStr=to_string(int(temperture));
@@ -30,15 +43,18 @@ void GUI::updateTStr(float temperture) const
     lastTStr = TStr;
 }
 
-void GUI::updateTargetTStr() const
+void GUI::updateTargetTStr()
 {
+    const size_t targetT = getTargetT();
     char tensPlace = targetT/10 + '0', onesPlace = targetT%10 + '0';
     showOptionChar(tensPlace, 0, 11*fontWidth, targetStrTop);
     showOptionChar(onesPlace, 1, 13*fontWidth, targetStrTop);
 }
 
-void GUI::showOptionChar(char ch, u8 this_cursor, uint x, uint y) const
+void GUI::showOptionChar(char ch, u8 this_cursor, uint x, uint y)
 {
+    const u8 cursor=getCursor();
+    const bool cursorFixed=getCursorFixed();
     if(cursor == this_cursor)
     {
         if(cursorFixed)
@@ -52,8 +68,11 @@ void GUI::showOptionChar(char ch, u8 this_cursor, uint x, uint y) const
     }
 }
 
-void GUI::updateTargetLine() const
+void GUI::updateTargetLine()
 {
+    static Mutex mutex;
+    mutex.lock();
+    const size_t targetT = getTargetT();
     static uint lastTargetLine = 0;
     if (lastTargetLine != 0) //删除之前的目标温度线
     {
@@ -63,17 +82,19 @@ void GUI::updateTargetLine() const
     uint targetLine = getY(targetT) + lineButtom;
     screen.line(lineLeft, targetLine, screen.xMax, targetLine, targetColor);
     lastTargetLine = targetLine;
+    mutex.unlock();
 }
 
-void GUI::drawTablePoint(uint x, uint y) const
+void GUI::drawTablePoint(uint x, uint y)
 {
     if (y == 0 || y > tableYMax)
         return;
     screen.point(x + lineLeft + 1, y + lineButtom, lineColor);
 }
 
-void GUI::eraseTablePoint(uint x, uint y) const
+void GUI::eraseTablePoint(uint x, uint y)
 {
+    const size_t targetT = getTargetT();
     if (y == 0 || y > tableYMax)
         return;
     if (y == getY(targetT))
@@ -82,7 +103,7 @@ void GUI::eraseTablePoint(uint x, uint y) const
         screen.point(x + lineLeft + 1, y + lineButtom, tableColor);
 }
 
-void GUI::updateTableStr() const
+void GUI::updateTableStr()
 {
     static string lastTopStr="";
     static string lastButtomStr="";
@@ -101,6 +122,7 @@ void GUI::updateTableStr() const
 
 void GUI::caluRange()
 {
+    const size_t targetT = getTargetT();
     maxT = targetT + targetWidth, minT = targetT - targetWidth;
     for (auto ii : TList)
     {
@@ -127,7 +149,7 @@ void GUI::caluPoint()
     }
 }
 
-void GUI::drawTable() const
+void GUI::drawTable()
 {
     for (int i = 0; i < lastPointList.size(); ++i)
     {
@@ -157,28 +179,36 @@ void GUI::onTChange(float newT)
 
 void GUI::onKeyDown(KeyCode keyValue)
 {
-    static constexpr u8 optionAmount = 2;
+    u8 cursor=getCursor();
+    bool cursorFixed=getCursorFixed();
+
+    static constexpr u8 optionAmount = 3;
+    const size_t targetT = getTargetT();
     if(cursorFixed)
     {
         switch(keyValue)
         {
         case KeyCode::ENTER :
-            cursorFixed = false;
+            setCursorFixed(false);
+            if(cursor==2)
+            {
+                setControlFlag(false);
+            }
             break;
         case KeyCode::UP :
             switch(cursor)
             {
             case 0:
                 if(targetT<90)
-                    targetT+=10;
+                    setTargetT(targetT+10);
                 else
-                    targetT-=70;
+                    setTargetT(targetT-70);
                 break;
             case 1:
                 if(targetT%10<9)
-                    ++targetT;
+                    setTargetT(targetT+1);
                 else
-                    targetT-=9;
+                    setTargetT(targetT-9);
                 break;
             default:
                 break;
@@ -189,15 +219,15 @@ void GUI::onKeyDown(KeyCode keyValue)
             {
             case 0:
                 if(targetT>=30)
-                    targetT-=10;
+                    setTargetT(targetT-10);
                 else
-                    targetT+=70;
+                    setTargetT(targetT+70);
                 break;
             case 1:
                 if(targetT%10>=1)
-                    --targetT;
+                    setTargetT(targetT-1);
                 else
-                    targetT+=9;
+                    setTargetT(targetT+9);
                 break;
             default:
                 break;
@@ -206,26 +236,35 @@ void GUI::onKeyDown(KeyCode keyValue)
         default:
             break;
         }
+        updateTargetLine();
     }
     else
     {
         switch(keyValue)
         {
         case KeyCode::ENTER :
-            cursorFixed = true;
-            break;
-        case KeyCode::UP :
-            cursor = (cursor+1)%optionAmount;
+            setCursorFixed(true);
+            if(cursor==2)
+            {
+                setControlFlag(true);
+            }
             break;
         case KeyCode::DOWN :
-            if(cursor>0)
-                --cursor;
+            if(cursor<optionAmount-1)
+                setCursor(cursor+1);
             else
-                cursor = optionAmount - 1;
+                setCursor(0);
+            break;
+        case KeyCode::UP :
+            if(cursor>0)
+                setCursor(cursor-1);
+            else
+                setCursor(optionAmount-1);
             break;
         default:
             break;
         }
     }
     updateTargetTStr();
+    updateBotton();
 }

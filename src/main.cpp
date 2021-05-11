@@ -12,22 +12,49 @@ GUI gui(screen);
 
 DigitalIn encodeB(PB_7);
 DigitalIn encodeA(PC_13);
+DigitalIn enterButton(PA_13);
+
 DigitalOut LedRed(PC_2,1);
 DigitalOut LedGreen(PC_3,1);
 
 PwmOut Resistor(D3);
 PwmOut Fanner(D2);
 
-bool spiLock = false;
-
 Thread TMeasurer;
 
-Mutex threadMutex;
-
-bool controlFlag = true;
-
-size_t targetT=50;
 double t_integral=0; //积分累计值
+
+Mutex targetTMutex;
+size_t _targetT=50;
+size_t getTargetT()
+{
+    targetTMutex.lock();
+    size_t res = _targetT;
+    targetTMutex.unlock();
+    return res;
+}
+void setTargetT(size_t value)
+{
+    targetTMutex.lock();
+    _targetT = value;
+    targetTMutex.unlock();
+}
+
+Mutex controlFlagMutex;
+bool _controlFlag = false;
+bool getControlFlag()
+{
+    controlFlagMutex.lock();
+    bool res = _controlFlag;
+    controlFlagMutex.unlock();
+    return res;
+}
+void setControlFlag(bool value)
+{
+    controlFlagMutex.lock();
+    _controlFlag=value;
+    controlFlagMutex.unlock();
+}
 
 // main() runs in its own thread in the OS
 void controlT(float pidValue)
@@ -55,6 +82,7 @@ float PID(float newT)
     constexpr double kp = 0.1;
     constexpr double ki = 0.000176;
     constexpr double kd = 0.13636;
+    size_t targetT=getTargetT();
     
     static double last_error = 0;   //上次的温差
     double pidValue = 0;    //pid计算结果
@@ -69,8 +97,8 @@ float PID(float newT)
 	pidValue += kd * (error - last_error);
     
     //调试
-    //printf("kp:%d\tki:%d\tkd:%d\n",int(kp*error*10000),int(ki * t_integral*10000),int(kd * (error - last_error)*10000));
-    //printf("100*pid:%d\n",int(pidValue*100));
+    printf("kp:%d\tki:%d\tkd:%d\n",int(kp*error*10000),int(ki * t_integral*10000),int(kd * (error - last_error)*10000));
+    printf("100*pid:%d\n",int(pidValue*100));
     
     // 更新上次误差
 	last_error = error;
@@ -81,7 +109,7 @@ void measureT()
 {
     while(1)
     {
-        threadMutex.lock();
+
         float newT = tsensor.readT();
         if(newT<0)
         {
@@ -99,7 +127,7 @@ void measureT()
         else
             LedRed=1;
 
-        bool control_flag = controlFlag;
+        bool control_flag = getControlFlag();
         if(control_flag)
         {
             controlT(PID(newT));
@@ -108,36 +136,50 @@ void measureT()
         {
             t_integral = 0;
         }
-        threadMutex.unlock();
+
     }
+}
+
+void keyScan()
+{
+    static int lastA = 1;
+    static bool enterState=0;
+    static unsigned char enterBuffer = 0;
+    int newA=encodeA;
+    enterBuffer = (enterBuffer<<1) | enterButton;
+    if(enterBuffer == 0xff && enterState == 0)
+    {
+        gui.onKeyDown(KeyCode::ENTER);
+        enterState = 1;
+    }
+    if(enterBuffer == 0x00 && enterState == 1)
+    {
+        enterState = 0;
+    }
+    if(lastA==1 && newA==0)
+    {
+        if(encodeB==1)
+        {
+            gui.onKeyDown(KeyCode::DOWN);
+        }
+        else
+        {
+            gui.onKeyDown(KeyCode::UP);
+        }
+
+    }
+    lastA=newA;
 }
 
 int main()
 {
-    cout<<"Begin"<<endl;
+    printf("Begin\n");
     gui.init();
     tsensor.init();
-    TMeasurer.start(callback(measureT));
-    int lastA = 1;
+    TMeasurer.start(callback(measureT));    
     while(1)
     {
-        int newA=encodeA;
-        if(lastA==1 && newA==0)
-        {
-            threadMutex.lock();
-            if(encodeB==1)
-            {
-                printf("Down\n");
-                gui.onKeyDown(KeyCode::DOWN);
-            }
-            else
-            {
-                printf("Up\n");
-                gui.onKeyDown(KeyCode::UP);
-            }
-            threadMutex.unlock();
-        }
-        lastA=newA;
+        keyScan();
         ThisThread::sleep_for(5ms);
     }
     cout<<"Exited"<<endl;

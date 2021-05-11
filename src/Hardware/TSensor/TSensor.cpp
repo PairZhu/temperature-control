@@ -11,11 +11,8 @@ float TSensor::measure()
     
     ThisThread::sleep_for(periodMs*1ms);
 
-
     //cs=0;
 
-    spi.frequency(1000000);
-    spi.format(16, 1);
     uint response = spi.write(0xff);
 
     //cs=1;
