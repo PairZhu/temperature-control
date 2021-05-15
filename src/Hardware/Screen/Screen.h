@@ -31,7 +31,6 @@ class Screen
 private:
     using u8 = unsigned char;
     using uint = unsigned int;
-    DigitalOut cs;
     DigitalOut reset;
     DigitalOut dataCmd;
     DigitalOut backLight;
@@ -97,12 +96,11 @@ public:
     void refreshStr(string newStr ,uint x, uint y, string lastStr, uint BKColor = Color::white);
     Screen(PinName _reset, PinName _dataCmd, PinName _cs, PinName _backLight, PinName* _spi, bool _horizontal = false)
         : reset(_reset), dataCmd(_dataCmd), backLight(_backLight),
-          spi(_spi[0],_spi[1],_spi[2],_cs,use_gpio_ssel), cs(_cs),
+          spi(_spi[0],_spi[1],_spi[2],_cs,use_gpio_ssel),
           horizontal(_horizontal), brushColor(Color::black), backgroundColor(Color::white),
           xMax(_horizontal?length-1:width-1),
           yMax(_horizontal?width-1:length-1)
     {
-        cs = 1;
         spi.frequency(1000000);
         spi.format(8, 0);
     }

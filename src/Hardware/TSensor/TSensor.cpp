@@ -31,7 +31,7 @@ float TSensor::measure()
 float TSensor::readT()
 {
     float newT = measure();
-    if(newT<0 || abs(lastT-newT)>5)
+    if(newT<0 || abs(lastT-newT)>2)
     {
         return -1.0f;
     }

@@ -25,7 +25,7 @@ Thread TMeasurer;
 double t_integral=0; //积分累计值
 
 Mutex targetTMutex;
-size_t _targetT=50;
+size_t _targetT=40;
 size_t getTargetT()
 {
     targetTMutex.lock();
@@ -61,7 +61,7 @@ void controlT(float pidValue)
 {
     float pwmValue = pidValue; //占空比（-100% ~ +80%）
     //pwm饱和值
-    if(pwmValue<0) pidValue*=10.0f;
+    if(pwmValue<0) pidValue*=5.0f;
     if(pwmValue>1) pidValue=0.8f;
     if(pwmValue<-1) pidValue=-1.0f;
 
@@ -80,8 +80,8 @@ void controlT(float pidValue)
 float PID(float newT)
 {
     constexpr double kp = 0.1;
-    constexpr double ki = 0.000176;
-    constexpr double kd = 0.13636;
+    constexpr double ki = 0.000036;
+    constexpr double kd = 0.06636;
     size_t targetT=getTargetT();
     
     static double last_error = 0;   //上次的温差
